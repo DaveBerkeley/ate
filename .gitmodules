@@ -1,0 +1,6 @@
+[submodule "PyExpLabSys"]
+	path = PyExpLabSys
+	url = https://github.com/CINF/PyExpLabSys.git
+[submodule "iot"]
+	path = iot
+	url = ssh://klatu/usr/local/data/git/iot
