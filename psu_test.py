@@ -22,25 +22,25 @@ topic = 'home/psu'
 #
 #
 
-def main():
-    """Main module function, used for testing simple functional test"""
-    device = Tenma722540('/dev/psu')
+def discharge():
     print('ID:', device.get_identification())
     print('Status:', device.status())
 
     device.set_output(False)
     device.recall_memory(5)
 
-    print('Overcurrent and overvoltage protection, watch the LEDS switch')
     device.set_overcurrent_protection(True)
     device.set_overvoltage_protection(True)
 
     device.set_voltage(0.0)
-    device.set_current(0.4)
+    device.set_current(2.0)
+    time.sleep(3)
     device.set_output(True)
 
+    time.sleep(3)
+
     try:
-        for mv in range(0, 16500, 250):
+        for mv in range(15000, 0, -10):
             volts = mv / 1000.0
             device.set_voltage(volts)
             #time.sleep(1)
@@ -72,21 +72,78 @@ def main():
 #
 
 def monitor():
-    device = Tenma722540('/dev/psu')
-
     while True:
         try:
             it = device.get_actual_current()
             vt = device.get_actual_voltage()
-            #print(vt, it)
-    
+            print(vt, it)
+ 
             msg = { 'V' : vt, 'I' : it }
             mqtt.send(topic, json.dumps(msg))
         except ValueError:
             pass
 
-        time.sleep(1)
+        time.sleep(.1)
 
-main()
+#
+#
+
+def alert():
+    device.set_output(False)
+    device.recall_memory(5)
+
+    print('Overcurrent and overvoltage protection, watch the LEDS switch')
+    device.set_overcurrent_protection(True)
+    device.set_overvoltage_protection(True)
+
+    v = 16.0
+    device.set_voltage(v)
+    device.set_current(2.0)
+    device.set_output(True)
+
+    time.sleep(3)
+
+    it = device.get_actual_current()
+    vt = device.get_actual_voltage()
+    print(vt, it)
+
+    msg = { 'V' : vt, 'I' : it }
+    mqtt.send(topic, json.dumps(msg))
+
+    while True:
+        device.set_voltage(v)
+        v -= 0.01
+        time.sleep(0.1)
+
+        if v < 5:
+            break
+        
+        it = device.get_actual_current()
+        vt = device.get_actual_voltage()
+        print(vt, it)
+
+        msg = { 'V' : vt, 'I' : it }
+        mqtt.send(topic, json.dumps(msg))
+
+
+#
+#
+
+if __name__ == "__main__":
+    device = Tenma722540('/dev/psu')
+
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+        if cmd == 'on':
+            device.set_voltage(16.8)
+            device.set_current(2.0)
+            device.set_output(True)
+        elif cmd == 'off':
+            device.set_output(False)
+    else:
+        #main()
+        monitor()
+        #discharge()
+        #alert()
 
 # FIN
