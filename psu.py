@@ -54,8 +54,8 @@ if __name__ == "__main__":
     p.add_argument('commands', nargs='+')
     p.add_argument('--max-v', dest='max_v', type=float, default=16.8)
     p.add_argument('--max-i', dest='max_i', type=float, default=2.0)
-    p.add_argument('--overcurrent', dest='overcurrent', type=int, default=0)
-    p.add_argument('--overvoltage', dest='overvoltage', type=int, default=0)
+    p.add_argument('--overcurrent', dest='overcurrent', type=int, default=1)
+    p.add_argument('--overvoltage', dest='overvoltage', type=int, default=1)
     p.add_argument('--on', dest='on', action='store_true', default=False)
     p.add_argument('--mqtt', dest='mqtt', help='mqqt server')
     p.add_argument('--topic', dest='topic', help='mqtt topic')
@@ -77,6 +77,10 @@ if __name__ == "__main__":
         assert(vv <= args.max_v), (vv, args.max_v)
         v = vv
         device.set_voltage(v)
+
+    i = args.max_i
+    print(f'set current={i}')
+    device.set_current(i)
 
     i = device.get_actual_current()
     v = device.get_actual_voltage()
@@ -113,6 +117,11 @@ if __name__ == "__main__":
             elif command.startswith('v='):
                 parts = command.split('=')
                 set_voltage(float(parts[1]))
+            elif command.startswith('m='):
+                parts = command.split('=')
+                m = int(parts[1])
+                print(f'set memory={m}')
+                device.recall_memory(m)
             elif command == 'monitor':
                 monitor(args.mqtt, args.topic)
             else:
