@@ -67,8 +67,8 @@ if __name__ == "__main__":
     device = Tenma722540(args.path)
 
     memory = args.memory
-    print(f'set memory={memory}')
-    device.recall_memory(memory)
+    #print(f'set memory={memory}')
+    #device.recall_memory(memory)
 
     print('set overcurrent', args.overcurrent)
     device.set_overcurrent_protection(args.overcurrent)
