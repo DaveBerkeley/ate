@@ -59,11 +59,16 @@ if __name__ == "__main__":
     p.add_argument('--on', dest='on', action='store_true', default=False)
     p.add_argument('--mqtt', dest='mqtt', help='mqqt server')
     p.add_argument('--topic', dest='topic', help='mqtt topic')
+    p.add_argument('--memory', dest='memory', type=int, default=5)
 
     args = p.parse_args()
     #print(args)
 
     device = Tenma722540(args.path)
+
+    memory = args.memory
+    print(f'set memory={memory}')
+    device.recall_memory(memory)
 
     print('set overcurrent', args.overcurrent)
     device.set_overcurrent_protection(args.overcurrent)
@@ -87,47 +92,55 @@ if __name__ == "__main__":
 
     if args.on:
         print(f'switch on. v={v} i={i}')
-        device.set_output(True)        
+        device.set_output(True)  
 
     repeat = False
 
-    while True:
+    idx = 0
+    loop = 0
 
-        for command in args.commands:
-            if command == 'on':
-                print(f'switch on. v={v} i={i}')
-                device.set_output(True)
-            elif command == 'off':
-                print('switch off')
-                device.set_output(False)
-            elif command.startswith('sleep='):
-                parts = command.split('=')
-                period = float(parts[1])
-                print('sleeping', period)
-                time.sleep(period)
-            elif command == 'repeat':
-                print('repeat')
-                repeat = True
-            elif command.startswith('v+'):
-                parts = command.split('+')
-                set_voltage(v + float(parts[1]))
-            elif command.startswith('v-'):
-                parts = command.split('-')
-                set_voltage(v - float(parts[1]))
-            elif command.startswith('v='):
-                parts = command.split('=')
-                set_voltage(float(parts[1]))
-            elif command.startswith('m='):
-                parts = command.split('=')
-                m = int(parts[1])
-                print(f'set memory={m}')
-                device.recall_memory(m)
-            elif command == 'monitor':
-                monitor(args.mqtt, args.topic)
-            else:
-                raise Exception(f'Unknown command {command}')
+    while idx < len(args.commands):
 
-        if not repeat:
-            break
+        command = args.commands[idx]
+        idx += 1
+
+        if command == 'on':
+            print(f'switch on. v={v} i={i}')
+            device.set_output(True)
+        elif command == 'off':
+            print('switch off')
+            device.set_output(False)
+        elif command.startswith('sleep='):
+            parts = command.split('=')
+            period = float(parts[1])
+            print('sleeping', period)
+            time.sleep(period)
+        elif command == 'repeat':
+            print('repeat', loop)
+            idx = loop
+        elif command == 'loop':
+            print('loop')
+            loop = idx
+        elif command.startswith('v+'):
+            parts = command.split('+')
+            set_voltage(v + float(parts[1]))
+        elif command.startswith('v-'):
+            parts = command.split('-')
+            set_voltage(v - float(parts[1]))
+        elif command.startswith('v='):
+            parts = command.split('=')
+            set_voltage(float(parts[1]))
+        elif command.startswith('m='):
+            parts = command.split('=')
+            memory = int(parts[1])
+            print(f'set memory={memory}')
+            device.recall_memory(memory)
+        elif command == 'monitor':
+            monitor(args.mqtt, args.topic)
+        elif command == 'save':
+            print('save memory', memory)
+            device.save_memory(memory)
+        else:
+            raise Exception(f'Unknown command {command}')
 
 # FIN
