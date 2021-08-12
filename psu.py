@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
 import sys
+import os
 import json
 import time
 import argparse
 import datetime
 
 # Add the submodule to PATH
-sys.path.append('PyExpLabSys')
-sys.path.append('PyExpLabSys/PyExpLabSys/drivers')
+here = os.path.dirname(__file__)
+sys.path.append(here + '/PyExpLabSys')
+sys.path.append(here + '/PyExpLabSys/PyExpLabSys/drivers')
 
 import tenma
 
