@@ -49,7 +49,7 @@ def monitor(server, topic):
 if __name__ == "__main__":
 
     p = argparse.ArgumentParser()
-    p.add_argument('--path', dest='path', default='/dev/psu', help='device path')
+    p.add_argument('--path', dest='path', default='/dev/ttypsu', help='device path')
     p.add_argument('commands', nargs='+')
     p.add_argument('--max-v', dest='max_v', type=float, default=16.8)
     p.add_argument('--max-i', dest='max_i', type=float, default=2.0)
