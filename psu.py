@@ -7,18 +7,47 @@ import time
 import argparse
 import datetime
 
+import socket
+
 # Add the submodule to PATH
 here = os.path.dirname(__file__)
 sys.path.append(here + '/PyExpLabSys')
 sys.path.append(here + '/PyExpLabSys/PyExpLabSys/drivers')
 
-import tenma
+from tenma import TenmaBase
 
 #
 #
 
-class Tenma722540(tenma.TenmaBase):
-    pass
+class Socket(TenmaBase):
+
+    def __init__(self, server, port, sleep_after_command=0.1):
+        self.sleep_after_command = sleep_after_command
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect((server, port))
+
+    def com(self, command, decode_reply=True):
+        #print(':: tx', command)
+ 
+        self.s.send(command.encode('utf-8'))
+        time.sleep(self.sleep_after_command)
+        if command.endswith('?'):
+            reply = self.s.recv(1000)
+            #print(':: rx', reply)
+            if decode_reply:
+                reply = reply.decode('utf-8')  # pylint: disable=redefined-variable-type
+            return reply
+
+#
+#
+
+def SocketDevice(path):
+    print(':', path)
+    server, port = path.split(':')
+    return Socket(server, int(port))
+
+class SerialDevice(TenmaBase):
+    """Driver for the Tenma 72-2540 power supply"""
 
 #
 #
@@ -49,8 +78,8 @@ def monitor(server, topic):
 if __name__ == "__main__":
 
     p = argparse.ArgumentParser()
-    p.add_argument('--path', dest='path', default='/dev/ttypsu', help='device path')
-    p.add_argument('commands', nargs='+')
+    p.add_argument('--path', dest='path', default='/dev/ttypsu', help='/dev/ttyXXX or server:port')
+    p.add_argument('commands', nargs='+', help='on off v=x i=x v+x v-x sleep=s m=x save loop repeat show monitor')
     p.add_argument('--max-v', dest='max_v', type=float, default=16.8)
     p.add_argument('--max-i', dest='max_i', type=float, default=2.0)
     p.add_argument('--min-v', dest='min_v', type=float, default=0.0)
@@ -64,7 +93,11 @@ if __name__ == "__main__":
     args = p.parse_args()
     #print(args)
 
-    device = Tenma722540(args.path)
+    if args.path.startswith('/'):
+        # serial port
+        device = SerialDevice(args.path)
+    else:
+        device = SocketDevice(args.path)
 
     memory = args.memory
 
