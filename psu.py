@@ -8,13 +8,19 @@ import argparse
 import datetime
 
 import socket
+import serial
 
 # Add the submodule to PATH
 here = os.path.dirname(__file__)
+sys.path.append(here + '/hm305_ctrl')
+
 sys.path.append(here + '/PyExpLabSys')
 sys.path.append(here + '/PyExpLabSys/PyExpLabSys/drivers')
 
 from tenma import TenmaBase
+
+# https://github.com/JackDoan/hm305_ctrl 
+from hm305 import HM305
 
 #
 #
@@ -52,6 +58,38 @@ class SerialDevice(TenmaBase):
 #
 #
 
+class SerialDevice:
+    """Driver for the Hanmatek HM305T power supply"""
+
+    def __init__(self, path):
+        f = serial.Serial(path, baudrate=9600, timeout=0.1)
+        self.dev = HM305(f)
+        self.dev.initialize()
+
+    def set_output(self, on):
+        if on:
+            self.dev.on()
+        else:
+            self.dev.off()
+    def set_voltage(self, v):
+        self.dev.voltage.instrument_setpoint = v
+    def set_current(self, i):
+        self.dev.current.instrument_setpoint = i
+    def get_actual_current(self):
+        return self.dev.current.value
+    def get_actual_voltage(self):
+        return self.dev.voltage.value
+
+    def set_overcurrent_protection(self, x):
+        pass
+    def set_overvoltage_protection(self, x):
+        pass
+    def recall_memory(self, m):
+        pass
+
+#
+#
+
 def show(server, topic, i, v):
     tt = datetime.datetime.now()
     print(tt, v, i)
@@ -78,7 +116,7 @@ def monitor(server, topic):
 if __name__ == "__main__":
 
     p = argparse.ArgumentParser()
-    p.add_argument('--path', dest='path', default='/dev/ttypsu', help='/dev/ttyXXX or server:port')
+    p.add_argument('--path', dest='path', default='/dev/ttypsu2', help='/dev/ttyXXX or server:port')
     p.add_argument('commands', nargs='+', help='on off v=x i=x v+x v-x sleep=s m=x save loop repeat show monitor')
     p.add_argument('--max-v', dest='max_v', type=float, default=16.8)
     p.add_argument('--max-i', dest='max_i', type=float, default=2.0)

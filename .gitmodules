@@ -4,3 +4,6 @@
 [submodule "iot"]
 	path = iot
 	url = git@github.com:DaveBerkeley/iot.git
+[submodule "hm305_ctrl"]
+	path = hm305_ctrl
+	url = https://github.com/JackDoan/hm305_ctrl.git
